@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS vault_test;
+GRANT ALL PRIVILEGES ON vault_test.* TO 'vault'@'%';
+FLUSH PRIVILEGES;
