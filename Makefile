@@ -19,3 +19,9 @@ composer-install:
 
 phpstan:
 	docker compose exec php vendor/bin/phpstan
+
+phpcs-check:
+	docker compose exec php vendor/bin/php-cs-fixer check
+
+phpcs-fix:
+	docker compose exec php vendor/bin/php-cs-fixer fix
