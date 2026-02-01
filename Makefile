@@ -13,3 +13,6 @@ restart:
 
 sh:
 	docker compose exec php sh
+
+composer-install:
+	docker compose exec php composer install
