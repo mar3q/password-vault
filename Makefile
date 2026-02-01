@@ -11,3 +11,5 @@ restart:
 	@$(MAKE) down
 	@$(MAKE) start
 
+sh:
+	docker compose exec php sh
