@@ -16,3 +16,6 @@ sh:
 
 composer-install:
 	docker compose exec php composer install
+
+phpstan:
+	docker compose exec php vendor/bin/phpstan
