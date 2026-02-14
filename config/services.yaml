@@ -7,9 +7,9 @@ services:
         autowire: false
         autoconfigure: false
 
-    # --- Existing ---
+    # --- Shared :: Controllers ---
 
-    App\Controller\HealthController:
+    App\Shared\Presentation\Controller\HealthController:
         tags: ['controller.service_arguments']
         public: true
 
