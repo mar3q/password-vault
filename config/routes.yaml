@@ -11,4 +11,6 @@ controllers:
     resource: ../src/Controller/
     type: attribute
 
-
+identity_controllers:
+    resource: ../src/Identity/Presentation/Controller/
+    type: attribute

@@ -1,19 +1,100 @@
 # yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
 
-# This file is the entry point to configure your own services.
-# Files in the packages/ subdirectory configure your dependencies.
-# See also https://symfony.com/doc/current/service_container/import.html
-
-# Put parameters here that don't need to change on each machine where the app is deployed
-# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
 
 services:
-    # default configuration for services in *this* file
     _defaults:
-        autowire: false      # Automatically injects dependencies in your services.
-        autoconfigure: false # Automatically registers your services as commands, event subscribers, etc.
+        autowire: false
+        autoconfigure: false
+
+    # --- Existing ---
 
     App\Controller\HealthController:
+        tags: ['controller.service_arguments']
+        public: true
+
+    # --- Identity :: Infrastructure (adapters) ---
+
+    App\Identity\Infrastructure\Persistence\DoctrineUserRepository:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+
+    App\Identity\Infrastructure\EventDispatcher\SymfonyEventDispatcher:
+        arguments:
+            $logger: '@logger'
+
+    App\Identity\Infrastructure\Security\SymfonyPasswordHasher: ~
+
+    App\Identity\Infrastructure\Notification\LoggingEmailNotifier:
+        arguments:
+            $logger: '@logger'
+
+    # --- Identity :: Port bindings ---
+
+    App\Identity\Domain\Port\UserRepository:
+        alias: App\Identity\Infrastructure\Persistence\DoctrineUserRepository
+
+    App\Identity\Domain\Port\EventDispatcher:
+        alias: App\Identity\Infrastructure\EventDispatcher\SymfonyEventDispatcher
+
+    App\Identity\Application\Port\PasswordHasher:
+        alias: App\Identity\Infrastructure\Security\SymfonyPasswordHasher
+
+    App\Identity\Application\Port\EmailNotifier:
+        alias: App\Identity\Infrastructure\Notification\LoggingEmailNotifier
+
+    # --- Identity :: Command Handlers ---
+
+    App\Identity\Application\Command\RegisterUser\RegisterUserHandler:
+        arguments:
+            $userRepository: '@App\Identity\Domain\Port\UserRepository'
+            $passwordHasher: '@App\Identity\Application\Port\PasswordHasher'
+            $eventDispatcher: '@App\Identity\Domain\Port\EventDispatcher'
+            $emailNotifier: '@App\Identity\Application\Port\EmailNotifier'
+
+    App\Identity\Application\Command\ChangeEmail\ChangeEmailHandler:
+        arguments:
+            $userRepository: '@App\Identity\Domain\Port\UserRepository'
+            $eventDispatcher: '@App\Identity\Domain\Port\EventDispatcher'
+
+    App\Identity\Application\Command\ChangePassword\ChangePasswordHandler:
+        arguments:
+            $userRepository: '@App\Identity\Domain\Port\UserRepository'
+            $passwordHasher: '@App\Identity\Application\Port\PasswordHasher'
+            $eventDispatcher: '@App\Identity\Domain\Port\EventDispatcher'
+
+    # --- Identity :: Query Handlers ---
+
+    App\Identity\Application\Query\GetUserById\GetUserByIdHandler:
+        arguments:
+            $userRepository: '@App\Identity\Domain\Port\UserRepository'
+
+    App\Identity\Application\Query\GetUserByEmail\GetUserByEmailHandler:
+        arguments:
+            $userRepository: '@App\Identity\Domain\Port\UserRepository'
+
+    # --- Identity :: Controllers ---
+
+    App\Identity\Presentation\Controller\RegisterUserController:
+        arguments:
+            $handler: '@App\Identity\Application\Command\RegisterUser\RegisterUserHandler'
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Identity\Presentation\Controller\GetUserController:
+        arguments:
+            $handler: '@App\Identity\Application\Query\GetUserById\GetUserByIdHandler'
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Identity\Presentation\Controller\ChangeEmailController:
+        arguments:
+            $handler: '@App\Identity\Application\Command\ChangeEmail\ChangeEmailHandler'
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Identity\Presentation\Controller\ChangePasswordController:
+        arguments:
+            $handler: '@App\Identity\Application\Command\ChangePassword\ChangePasswordHandler'
         tags: ['controller.service_arguments']
         public: true
