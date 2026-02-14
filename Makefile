@@ -1,30 +1,74 @@
+UID := $(shell id -u)
+GID := $(shell id -g)
 
-.PHONY: start down
+DOCKER_COMPOSE := UID=$(UID) GID=$(GID) docker compose
+EXEC := $(DOCKER_COMPOSE) exec php
+CONSOLE := $(EXEC) bin/console
 
-start:
-	docker compose up -d
+.PHONY: docker-up docker-down docker-restart docker-build docker-sh \
+        app-install \
+        db-create db-migrate db-diff db-status db-validate \
+        qa qa-stan qa-cs qa-cs-fix qa-test \
+        start stop restart sh
 
-down:
-	docker compose down --remove-orphans
+## Docker
 
-restart:
-	@$(MAKE) down
-	@$(MAKE) start
+docker-up:
+	$(DOCKER_COMPOSE) up -d
 
-sh:
-	docker compose exec php sh
+docker-down:
+	$(DOCKER_COMPOSE) down --remove-orphans
 
-composer-install:
-	docker compose exec php composer install
+docker-restart: docker-down docker-up
 
-phpstan:
-	docker compose exec php vendor/bin/phpstan
+docker-build:
+	$(DOCKER_COMPOSE) build
 
-phpcs-check:
-	docker compose exec php vendor/bin/php-cs-fixer check
+docker-sh:
+	$(EXEC) sh
 
-phpcs-fix:
-	docker compose exec php vendor/bin/php-cs-fixer fix
+## Dependencies
 
-phpunit:
-	docker compose exec php env APP_ENV=test APP_DEBUG=0 bin/phpunit --testdox
+app-install:
+	$(EXEC) composer install
+
+## Database
+
+db-create:
+	$(CONSOLE) doctrine:database:create --if-not-exists
+	$(CONSOLE) doctrine:database:create --if-not-exists --env=test
+
+db-migrate: db-create
+	$(CONSOLE) doctrine:migrations:migrate --no-interaction
+
+db-diff:
+	$(CONSOLE) doctrine:migrations:diff
+
+db-status:
+	$(CONSOLE) doctrine:migrations:status
+
+db-validate:
+	$(CONSOLE) doctrine:schema:validate
+
+## Quality
+
+qa: qa-stan qa-cs qa-test
+
+qa-stan:
+	$(EXEC) vendor/bin/phpstan --memory-limit=512M
+
+qa-cs:
+	$(EXEC) vendor/bin/php-cs-fixer check
+
+qa-cs-fix:
+	$(EXEC) vendor/bin/php-cs-fixer fix
+
+qa-test:
+	$(EXEC) bin/phpunit --testdox
+
+## Aliases
+
+start: docker-up
+stop: docker-down
+restart: docker-restart
+sh: docker-sh
