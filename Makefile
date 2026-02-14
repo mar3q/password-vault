@@ -25,3 +25,6 @@ phpcs-check:
 
 phpcs-fix:
 	docker compose exec php vendor/bin/php-cs-fixer fix
+
+phpunit:
+	docker compose exec php env APP_ENV=test APP_DEBUG=0 bin/phpunit --testdox
