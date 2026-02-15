@@ -10,8 +10,6 @@ use Doctrine\DBAL\Types\StringType;
 
 final class EmailType extends StringType
 {
-    public const string NAME = 'email_vo';
-
     public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?Email
     {
         if ($value === null) {

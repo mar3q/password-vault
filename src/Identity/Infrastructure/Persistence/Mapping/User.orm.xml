@@ -10,7 +10,7 @@
         </id>
 
         <field name="email" type="email_vo" column="email" length="255" unique="true"/>
-        <field name="username" type="username_vo" column="username" length="64"/>
+        <field name="username" type="username_vo" column="username" length="64" unique="true"/>
         <field name="password" type="hashed_password" column="password" length="255"/>
     </entity>
 

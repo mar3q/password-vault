@@ -10,8 +10,6 @@ use Doctrine\DBAL\Types\StringType;
 
 final class HashedPasswordType extends StringType
 {
-    public const string NAME = 'hashed_password';
-
     public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?HashedPassword
     {
         if ($value === null) {

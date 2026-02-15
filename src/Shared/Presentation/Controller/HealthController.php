@@ -25,7 +25,7 @@ use Symfony\Component\Routing\Attribute\Route;
         ],
     ),
 )]
-final class HealthController
+final readonly class HealthController
 {
     public function __invoke(LoggerInterface $logger): Response
     {

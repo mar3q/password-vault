@@ -26,10 +26,12 @@ final class Version20260214171020 extends AbstractMigration
                     PRIMARY KEY (id)
                 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB
             SQL);
+        $this->addSql('CREATE UNIQUE INDEX UNIQ_1483A5E9F85E0677 ON users (username)');
     }
 
     public function down(Schema $schema): void
     {
         $this->addSql('DROP TABLE users');
+        $this->addSql('DROP INDEX UNIQ_1483A5E9F85E0677 ON users');
     }
 }

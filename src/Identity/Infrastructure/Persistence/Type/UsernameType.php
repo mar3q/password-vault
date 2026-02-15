@@ -10,8 +10,6 @@ use Doctrine\DBAL\Types\StringType;
 
 final class UsernameType extends StringType
 {
-    public const string NAME = 'username_vo';
-
     public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?Username
     {
         if ($value === null) {

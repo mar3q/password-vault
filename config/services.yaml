@@ -69,10 +69,6 @@ services:
         arguments:
             $userRepository: '@App\Identity\Domain\Port\UserRepository'
 
-    App\Identity\Application\Query\GetUserByEmail\GetUserByEmailHandler:
-        arguments:
-            $userRepository: '@App\Identity\Domain\Port\UserRepository'
-
     # --- Identity :: Controllers ---
 
     App\Identity\Presentation\Controller\RegisterUserController:
