@@ -9,6 +9,8 @@ use App\Identity\Application\Command\RegisterUser\RegisterUserHandler;
 use App\Identity\Domain\Exception\EmailAlreadyTakenException;
 use App\Identity\Domain\Exception\InvalidEmailException;
 use App\Identity\Domain\Exception\InvalidUsernameException;
+use App\Shared\Infrastructure\Http\MalformedJsonException;
+use App\Shared\Infrastructure\Http\RequestPayload;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -69,12 +71,15 @@ final readonly class RegisterUserController
 
     public function __invoke(Request $request): JsonResponse
     {
-        /** @var array{email?: string, username?: string, password?: string} $data */
-        $data = json_decode($request->getContent(), true) ?: [];
+        try {
+            $data = RequestPayload::jsonDecode($request);
+        } catch (MalformedJsonException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
 
-        $email = $data['email'] ?? '';
-        $username = $data['username'] ?? '';
-        $password = $data['password'] ?? '';
+        $email = (string) ($data['email'] ?? '');
+        $username = (string) ($data['username'] ?? '');
+        $password = (string) ($data['password'] ?? '');
 
         if ($email === '' || $username === '' || $password === '') {
             return new JsonResponse(

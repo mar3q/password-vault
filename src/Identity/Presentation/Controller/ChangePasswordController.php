@@ -7,6 +7,8 @@ namespace App\Identity\Presentation\Controller;
 use App\Identity\Application\Command\ChangePassword\ChangePasswordCommand;
 use App\Identity\Application\Command\ChangePassword\ChangePasswordHandler;
 use App\Identity\Domain\Exception\UserNotFoundException;
+use App\Shared\Infrastructure\Http\MalformedJsonException;
+use App\Shared\Infrastructure\Http\RequestPayload;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -66,10 +68,13 @@ final readonly class ChangePasswordController
 
     public function __invoke(string $id, Request $request): JsonResponse
     {
-        /** @var array{password?: string} $data */
-        $data = json_decode($request->getContent(), true) ?: [];
+        try {
+            $data = RequestPayload::jsonDecode($request);
+        } catch (MalformedJsonException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
 
-        $password = $data['password'] ?? '';
+        $password = (string) ($data['password'] ?? '');
 
         if ($password === '') {
             return new JsonResponse(

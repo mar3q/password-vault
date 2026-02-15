@@ -9,6 +9,8 @@ use App\Identity\Application\Command\ChangeEmail\ChangeEmailHandler;
 use App\Identity\Domain\Exception\EmailAlreadyTakenException;
 use App\Identity\Domain\Exception\InvalidEmailException;
 use App\Identity\Domain\Exception\UserNotFoundException;
+use App\Shared\Infrastructure\Http\MalformedJsonException;
+use App\Shared\Infrastructure\Http\RequestPayload;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -77,10 +79,13 @@ final readonly class ChangeEmailController
 
     public function __invoke(string $id, Request $request): JsonResponse
     {
-        /** @var array{email?: string} $data */
-        $data = json_decode($request->getContent(), true) ?: [];
+        try {
+            $data = RequestPayload::jsonDecode($request);
+        } catch (MalformedJsonException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
 
-        $email = $data['email'] ?? '';
+        $email = (string) ($data['email'] ?? '');
 
         if ($email === '') {
             return new JsonResponse(
