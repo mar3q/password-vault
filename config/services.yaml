@@ -23,8 +23,9 @@ services:
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
 
-    App\Identity\Infrastructure\EventDispatcher\SymfonyEventDispatcher:
+    App\Identity\Infrastructure\EventDispatcher\MessengerEventDispatcher:
         arguments:
+            $messageBus: '@messenger.default_bus'
             $logger: '@logger'
 
     App\Identity\Infrastructure\Security\SymfonyPasswordHasher: ~
@@ -43,7 +44,7 @@ services:
         alias: App\Identity\Infrastructure\Persistence\DoctrineUserRepository
 
     App\Identity\Domain\Port\EventDispatcher:
-        alias: App\Identity\Infrastructure\EventDispatcher\SymfonyEventDispatcher
+        alias: App\Identity\Infrastructure\EventDispatcher\MessengerEventDispatcher
 
     App\Identity\Application\Port\PasswordHasher:
         alias: App\Identity\Infrastructure\Security\SymfonyPasswordHasher
@@ -58,7 +59,14 @@ services:
             $userRepository: '@App\Identity\Domain\Port\UserRepository'
             $passwordHasher: '@App\Identity\Application\Port\PasswordHasher'
             $eventDispatcher: '@App\Identity\Domain\Port\EventDispatcher'
+
+    # --- Identity :: Event Listeners (Messenger handlers) ---
+
+    App\Identity\Application\EventListener\SendWelcomeEmailOnUserRegistered:
+        arguments:
             $emailNotifier: '@App\Identity\Application\Port\EmailNotifier'
+        tags:
+            - { name: messenger.message_handler, handles: App\Identity\Domain\Event\UserRegistered }
 
     App\Identity\Application\Command\ChangeEmail\ChangeEmailHandler:
         arguments:

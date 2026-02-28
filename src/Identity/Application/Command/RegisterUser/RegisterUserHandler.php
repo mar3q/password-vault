@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Identity\Application\Command\RegisterUser;
 
 use App\Identity\Application\DTO\UserDTO;
-use App\Identity\Application\Port\EmailNotifier;
 use App\Identity\Application\Port\PasswordHasher;
 use App\Identity\Domain\Exception\EmailAlreadyTakenException;
 use App\Identity\Domain\Model\Email;
@@ -21,7 +20,6 @@ final readonly class RegisterUserHandler
         private UserRepository $userRepository,
         private PasswordHasher $passwordHasher,
         private EventDispatcher $eventDispatcher,
-        private EmailNotifier $emailNotifier,
     ) {}
 
     public function __invoke(RegisterUserCommand $command): UserDTO
@@ -42,7 +40,6 @@ final readonly class RegisterUserHandler
 
         $this->userRepository->save($user);
         $this->eventDispatcher->dispatch($user->releaseEvents());
-        $this->emailNotifier->sendWelcome($email, $username->value());
 
         return UserDTO::fromUser($user);
     }
