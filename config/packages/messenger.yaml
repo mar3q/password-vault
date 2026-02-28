@@ -12,3 +12,6 @@ framework:
             App\Identity\Domain\Event\UserRegistered: sync
             App\Identity\Domain\Event\UserEmailChanged: sync
             App\Identity\Domain\Event\UserPasswordChanged: sync
+            App\Vault\Domain\Event\EntryCreated: sync
+            App\Vault\Domain\Event\EntryUpdated: sync
+            App\Vault\Domain\Event\EntryDeleted: sync

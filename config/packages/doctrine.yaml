@@ -11,6 +11,12 @@ doctrine:
                 class: App\Identity\Infrastructure\Persistence\Type\UsernameType
             hashed_password:
                 class: App\Identity\Infrastructure\Persistence\Type\HashedPasswordType
+            entry_id:
+                class: App\Vault\Infrastructure\Persistence\Type\EntryIdType
+            owner_id:
+                class: App\Vault\Infrastructure\Persistence\Type\OwnerIdType
+            entry_title:
+                class: App\Vault\Infrastructure\Persistence\Type\EntryTitleType
     orm:
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
@@ -22,6 +28,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Identity/Infrastructure/Persistence/Mapping'
                 prefix: 'App\Identity\Domain\Model'
                 alias: Identity
+            Vault:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Vault/Infrastructure/Persistence/Mapping'
+                prefix: 'App\Vault\Domain\Model'
+                alias: Vault
         controller_resolver:
             auto_mapping: false
 

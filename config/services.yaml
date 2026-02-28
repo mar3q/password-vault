@@ -110,3 +110,89 @@ services:
             $handler: '@App\Identity\Application\Command\ChangePassword\ChangePasswordHandler'
         tags: ['controller.service_arguments']
         public: true
+
+    # --- Vault :: Infrastructure (adapters) ---
+
+    App\Vault\Infrastructure\Persistence\DoctrineVaultEntryRepository:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+
+    App\Vault\Infrastructure\Encryption\SodiumEncrypter:
+        arguments:
+            $encryptionKey: '%env(VAULT_ENCRYPTION_KEY)%'
+
+    # --- Vault :: Port bindings ---
+
+    App\Vault\Domain\Port\VaultRepository:
+        alias: App\Vault\Infrastructure\Persistence\DoctrineVaultEntryRepository
+
+    App\Vault\Domain\Port\Encrypter:
+        alias: App\Vault\Infrastructure\Encryption\SodiumEncrypter
+
+    # --- Vault :: Command Handlers ---
+
+    App\Vault\Application\Command\CreateEntry\CreateEntryHandler:
+        arguments:
+            $vaultRepository: '@App\Vault\Domain\Port\VaultRepository'
+            $encrypter: '@App\Vault\Domain\Port\Encrypter'
+            $eventDispatcher: '@App\Identity\Domain\Port\EventDispatcher'
+
+    App\Vault\Application\Command\UpdateEntry\UpdateEntryHandler:
+        arguments:
+            $vaultRepository: '@App\Vault\Domain\Port\VaultRepository'
+            $encrypter: '@App\Vault\Domain\Port\Encrypter'
+            $eventDispatcher: '@App\Identity\Domain\Port\EventDispatcher'
+
+    App\Vault\Application\Command\DeleteEntry\DeleteEntryHandler:
+        arguments:
+            $vaultRepository: '@App\Vault\Domain\Port\VaultRepository'
+            $eventDispatcher: '@App\Identity\Domain\Port\EventDispatcher'
+
+    # --- Vault :: Query Handlers ---
+
+    App\Vault\Application\Query\GetEntryById\GetEntryByIdHandler:
+        arguments:
+            $vaultRepository: '@App\Vault\Domain\Port\VaultRepository'
+            $encrypter: '@App\Vault\Domain\Port\Encrypter'
+
+    App\Vault\Application\Query\ListEntries\ListEntriesHandler:
+        arguments:
+            $vaultRepository: '@App\Vault\Domain\Port\VaultRepository'
+            $encrypter: '@App\Vault\Domain\Port\Encrypter'
+
+    # --- Vault :: Controllers ---
+
+    App\Vault\Presentation\Controller\CreateEntryController:
+        arguments:
+            $handler: '@App\Vault\Application\Command\CreateEntry\CreateEntryHandler'
+            $security: '@security.helper'
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Vault\Presentation\Controller\GetEntryController:
+        arguments:
+            $handler: '@App\Vault\Application\Query\GetEntryById\GetEntryByIdHandler'
+            $security: '@security.helper'
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Vault\Presentation\Controller\ListEntriesController:
+        arguments:
+            $handler: '@App\Vault\Application\Query\ListEntries\ListEntriesHandler'
+            $security: '@security.helper'
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Vault\Presentation\Controller\UpdateEntryController:
+        arguments:
+            $handler: '@App\Vault\Application\Command\UpdateEntry\UpdateEntryHandler'
+            $security: '@security.helper'
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Vault\Presentation\Controller\DeleteEntryController:
+        arguments:
+            $handler: '@App\Vault\Application\Command\DeleteEntry\DeleteEntryHandler'
+            $security: '@security.helper'
+        tags: ['controller.service_arguments']
+        public: true

@@ -7,3 +7,7 @@ shared_controllers:
 identity_controllers:
     resource: ../src/Identity/Presentation/Controller/
     type: attribute
+
+vault_controllers:
+    resource: ../src/Vault/Presentation/Controller/
+    type: attribute
