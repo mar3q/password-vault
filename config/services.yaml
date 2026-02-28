@@ -13,6 +13,10 @@ services:
         tags: ['controller.service_arguments']
         public: true
 
+    App\Shared\Presentation\Controller\LoginController:
+        tags: ['controller.service_arguments']
+        public: true
+
     # --- Identity :: Infrastructure (adapters) ---
 
     App\Identity\Infrastructure\Persistence\DoctrineUserRepository:
@@ -24,6 +28,10 @@ services:
             $logger: '@logger'
 
     App\Identity\Infrastructure\Security\SymfonyPasswordHasher: ~
+
+    App\Identity\Infrastructure\Security\DoctrineUserProvider:
+        arguments:
+            $userRepository: '@App\Identity\Domain\Port\UserRepository'
 
     App\Identity\Infrastructure\Notification\LoggingEmailNotifier:
         arguments:

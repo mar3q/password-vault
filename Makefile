@@ -8,6 +8,7 @@ CONSOLE := $(EXEC) bin/console
 .PHONY: docker-up docker-down docker-restart docker-build docker-sh \
         app-install \
         db-create db-migrate db-diff db-status db-validate \
+        jwt-keys \
         qa qa-stan qa-cs qa-cs-fix qa-test \
         start stop restart sh
 
@@ -49,6 +50,11 @@ db-status:
 
 db-validate:
 	$(CONSOLE) doctrine:schema:validate
+
+## JWT
+
+jwt-keys:
+	$(CONSOLE) lexik:jwt:generate-keypair --overwrite
 
 ## Quality
 
