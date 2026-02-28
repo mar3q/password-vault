@@ -6,7 +6,6 @@ namespace App\Tests\Application\Identity\Command;
 
 use App\Identity\Application\Command\RegisterUser\RegisterUserCommand;
 use App\Identity\Application\Command\RegisterUser\RegisterUserHandler;
-use App\Identity\Application\Port\EmailNotifier;
 use App\Identity\Application\Port\PasswordHasher;
 use App\Identity\Domain\Exception\EmailAlreadyTakenException;
 use App\Identity\Domain\Model\Email;
@@ -34,10 +33,7 @@ final class RegisterUserHandlerTest extends TestCase
         $dispatcher = $this->createMock(EventDispatcher::class);
         $dispatcher->expects(self::once())->method('dispatch');
 
-        $notifier = $this->createMock(EmailNotifier::class);
-        $notifier->expects(self::once())->method('sendWelcome');
-
-        $handler = new RegisterUserHandler($repository, $hasher, $dispatcher, $notifier);
+        $handler = new RegisterUserHandler($repository, $hasher, $dispatcher);
 
         $dto = $handler(new RegisterUserCommand('user@example.com', 'john', 'plain_password'));
 
@@ -61,9 +57,8 @@ final class RegisterUserHandlerTest extends TestCase
 
         $hasher = $this->createStub(PasswordHasher::class);
         $dispatcher = $this->createStub(EventDispatcher::class);
-        $notifier = $this->createStub(EmailNotifier::class);
 
-        $handler = new RegisterUserHandler($repository, $hasher, $dispatcher, $notifier);
+        $handler = new RegisterUserHandler($repository, $hasher, $dispatcher);
 
         $this->expectException(EmailAlreadyTakenException::class);
 
