@@ -9,6 +9,8 @@ RUN apt-get update \
 
 RUN docker-php-ext-install pdo_mysql zip
 
+RUN pecl install xdebug
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 RUN groupadd -g ${APP_GID} app \
