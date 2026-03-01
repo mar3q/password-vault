@@ -85,6 +85,13 @@ services:
         arguments:
             $userRepository: '@App\Identity\Domain\Port\UserRepository'
 
+    # --- Identity :: Console Commands ---
+
+    App\Identity\Presentation\Console\CreateUserCommand:
+        arguments:
+            $handler: '@App\Identity\Application\Command\RegisterUser\RegisterUserHandler'
+        tags: ['console.command']
+
     # --- Identity :: Controllers ---
 
     App\Identity\Presentation\Controller\RegisterUserController:
@@ -159,6 +166,20 @@ services:
         arguments:
             $vaultRepository: '@App\Vault\Domain\Port\VaultRepository'
             $encrypter: '@App\Vault\Domain\Port\Encrypter'
+
+    # --- Vault :: Console Commands ---
+
+    App\Vault\Presentation\Console\GetPasswordCommand:
+        arguments:
+            $userRepository: '@App\Identity\Domain\Port\UserRepository'
+            $handler: '@App\Vault\Application\Query\ListEntries\ListEntriesHandler'
+        tags: ['console.command']
+
+    App\Vault\Presentation\Console\ExportEntriesCommand:
+        arguments:
+            $userRepository: '@App\Identity\Domain\Port\UserRepository'
+            $handler: '@App\Vault\Application\Query\ListEntries\ListEntriesHandler'
+        tags: ['console.command']
 
     # --- Vault :: Controllers ---
 
