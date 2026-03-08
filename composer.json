@@ -1,6 +1,26 @@
 {
+    "name": "mar3q/password-vault",
+    "description": "REST API for managing encrypted credentials — built with Symfony 8, Hexagonal Architecture and CQRS.",
     "type": "project",
-    "license": "proprietary",
+    "license": "MIT",
+    "keywords": [
+        "symfony",
+        "php",
+        "rest-api",
+        "hexagonal-architecture",
+        "cqrs",
+        "ddd",
+        "password-manager",
+        "docker",
+        "jwt",
+        "sodium"
+    ],
+    "authors": [
+        {
+            "name": "Marek Dąbrowski",
+            "email": "marek.dabrowski.zse@gmail.com",
+        }
+    ],
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
@@ -76,6 +96,15 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
+        ],
+        "test": "phpunit",
+        "stan": "phpstan analyse --memory-limit=256M",
+        "cs": "php-cs-fixer fix --dry-run --diff",
+        "cs-fix": "php-cs-fixer fix",
+        "qa": [
+            "@stan",
+            "@cs",
+            "@test"
         ]
     },
     "conflict": {
