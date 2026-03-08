@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Identity\Presentation\Controller;
 
 use App\Identity\Application\Command\ChangeEmail\ChangeEmailCommand;
-use App\Identity\Application\Command\ChangeEmail\ChangeEmailHandler;
 use App\Identity\Domain\Exception\EmailAlreadyTakenException;
+use App\Shared\Application\Port\CommandBus;
 use App\Identity\Domain\Exception\InvalidEmailException;
 use App\Identity\Domain\Exception\UserNotFoundException;
 use App\Shared\Infrastructure\Http\MalformedJsonException;
@@ -74,7 +74,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final readonly class ChangeEmailController
 {
     public function __construct(
-        private ChangeEmailHandler $handler,
+        private CommandBus $commandBus,
     ) {}
 
     public function __invoke(string $id, Request $request): JsonResponse
@@ -95,7 +95,7 @@ final readonly class ChangeEmailController
         }
 
         try {
-            ($this->handler)(new ChangeEmailCommand($id, $email));
+            $this->commandBus->dispatch(new ChangeEmailCommand($id, $email));
         } catch (\InvalidArgumentException|InvalidEmailException $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (UserNotFoundException $e) {

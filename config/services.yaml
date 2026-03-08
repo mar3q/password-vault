@@ -7,6 +7,24 @@ services:
         autowire: false
         autoconfigure: false
 
+    # --- Shared :: Infrastructure (buses) ---
+
+    App\Shared\Infrastructure\Bus\MessengerCommandBus:
+        arguments:
+            $messageBus: '@command.bus'
+
+    App\Shared\Infrastructure\Bus\MessengerQueryBus:
+        arguments:
+            $messageBus: '@query.bus'
+
+    # --- Shared :: Port bindings ---
+
+    App\Shared\Application\Port\CommandBus:
+        alias: App\Shared\Infrastructure\Bus\MessengerCommandBus
+
+    App\Shared\Application\Port\QueryBus:
+        alias: App\Shared\Infrastructure\Bus\MessengerQueryBus
+
     # --- Shared :: Controllers ---
 
     App\Shared\Presentation\Controller\HealthController:
@@ -25,7 +43,7 @@ services:
 
     App\Identity\Infrastructure\EventDispatcher\MessengerEventDispatcher:
         arguments:
-            $messageBus: '@messenger.default_bus'
+            $messageBus: '@event.bus'
             $logger: '@logger'
 
     App\Identity\Infrastructure\Security\SymfonyPasswordHasher: ~
@@ -59,62 +77,70 @@ services:
             $userRepository: '@App\Identity\Domain\Port\UserRepository'
             $passwordHasher: '@App\Identity\Application\Port\PasswordHasher'
             $eventDispatcher: '@App\Identity\Domain\Port\EventDispatcher'
-
-    # --- Identity :: Event Listeners (Messenger handlers) ---
-
-    App\Identity\Application\EventListener\SendWelcomeEmailOnUserRegistered:
-        arguments:
-            $emailNotifier: '@App\Identity\Application\Port\EmailNotifier'
         tags:
-            - { name: messenger.message_handler, handles: App\Identity\Domain\Event\UserRegistered }
+            - { name: messenger.message_handler, bus: command.bus }
 
     App\Identity\Application\Command\ChangeEmail\ChangeEmailHandler:
         arguments:
             $userRepository: '@App\Identity\Domain\Port\UserRepository'
             $eventDispatcher: '@App\Identity\Domain\Port\EventDispatcher'
+        tags:
+            - { name: messenger.message_handler, bus: command.bus }
 
     App\Identity\Application\Command\ChangePassword\ChangePasswordHandler:
         arguments:
             $userRepository: '@App\Identity\Domain\Port\UserRepository'
             $passwordHasher: '@App\Identity\Application\Port\PasswordHasher'
             $eventDispatcher: '@App\Identity\Domain\Port\EventDispatcher'
+        tags:
+            - { name: messenger.message_handler, bus: command.bus }
 
     # --- Identity :: Query Handlers ---
 
     App\Identity\Application\Query\GetUserById\GetUserByIdHandler:
         arguments:
             $userRepository: '@App\Identity\Domain\Port\UserRepository'
+        tags:
+            - { name: messenger.message_handler, bus: query.bus }
+
+    # --- Identity :: Event Listeners ---
+
+    App\Identity\Application\EventListener\SendWelcomeEmailOnUserRegistered:
+        arguments:
+            $emailNotifier: '@App\Identity\Application\Port\EmailNotifier'
+        tags:
+            - { name: messenger.message_handler, bus: event.bus, handles: App\Identity\Domain\Event\UserRegistered }
 
     # --- Identity :: Console Commands ---
 
     App\Identity\Presentation\Console\CreateUserCommand:
         arguments:
-            $handler: '@App\Identity\Application\Command\RegisterUser\RegisterUserHandler'
+            $commandBus: '@App\Shared\Application\Port\CommandBus'
         tags: ['console.command']
 
     # --- Identity :: Controllers ---
 
     App\Identity\Presentation\Controller\RegisterUserController:
         arguments:
-            $handler: '@App\Identity\Application\Command\RegisterUser\RegisterUserHandler'
+            $commandBus: '@App\Shared\Application\Port\CommandBus'
         tags: ['controller.service_arguments']
         public: true
 
     App\Identity\Presentation\Controller\GetUserController:
         arguments:
-            $handler: '@App\Identity\Application\Query\GetUserById\GetUserByIdHandler'
+            $queryBus: '@App\Shared\Application\Port\QueryBus'
         tags: ['controller.service_arguments']
         public: true
 
     App\Identity\Presentation\Controller\ChangeEmailController:
         arguments:
-            $handler: '@App\Identity\Application\Command\ChangeEmail\ChangeEmailHandler'
+            $commandBus: '@App\Shared\Application\Port\CommandBus'
         tags: ['controller.service_arguments']
         public: true
 
     App\Identity\Presentation\Controller\ChangePasswordController:
         arguments:
-            $handler: '@App\Identity\Application\Command\ChangePassword\ChangePasswordHandler'
+            $commandBus: '@App\Shared\Application\Port\CommandBus'
         tags: ['controller.service_arguments']
         public: true
 
@@ -143,17 +169,23 @@ services:
             $vaultRepository: '@App\Vault\Domain\Port\VaultRepository'
             $encrypter: '@App\Vault\Domain\Port\Encrypter'
             $eventDispatcher: '@App\Identity\Domain\Port\EventDispatcher'
+        tags:
+            - { name: messenger.message_handler, bus: command.bus }
 
     App\Vault\Application\Command\UpdateEntry\UpdateEntryHandler:
         arguments:
             $vaultRepository: '@App\Vault\Domain\Port\VaultRepository'
             $encrypter: '@App\Vault\Domain\Port\Encrypter'
             $eventDispatcher: '@App\Identity\Domain\Port\EventDispatcher'
+        tags:
+            - { name: messenger.message_handler, bus: command.bus }
 
     App\Vault\Application\Command\DeleteEntry\DeleteEntryHandler:
         arguments:
             $vaultRepository: '@App\Vault\Domain\Port\VaultRepository'
             $eventDispatcher: '@App\Identity\Domain\Port\EventDispatcher'
+        tags:
+            - { name: messenger.message_handler, bus: command.bus }
 
     # --- Vault :: Query Handlers ---
 
@@ -161,59 +193,63 @@ services:
         arguments:
             $vaultRepository: '@App\Vault\Domain\Port\VaultRepository'
             $encrypter: '@App\Vault\Domain\Port\Encrypter'
+        tags:
+            - { name: messenger.message_handler, bus: query.bus }
 
     App\Vault\Application\Query\ListEntries\ListEntriesHandler:
         arguments:
             $vaultRepository: '@App\Vault\Domain\Port\VaultRepository'
             $encrypter: '@App\Vault\Domain\Port\Encrypter'
+        tags:
+            - { name: messenger.message_handler, bus: query.bus }
 
     # --- Vault :: Console Commands ---
 
     App\Vault\Presentation\Console\GetPasswordCommand:
         arguments:
             $userRepository: '@App\Identity\Domain\Port\UserRepository'
-            $handler: '@App\Vault\Application\Query\ListEntries\ListEntriesHandler'
+            $queryBus: '@App\Shared\Application\Port\QueryBus'
         tags: ['console.command']
 
     App\Vault\Presentation\Console\ExportEntriesCommand:
         arguments:
             $userRepository: '@App\Identity\Domain\Port\UserRepository'
-            $handler: '@App\Vault\Application\Query\ListEntries\ListEntriesHandler'
+            $queryBus: '@App\Shared\Application\Port\QueryBus'
         tags: ['console.command']
 
     # --- Vault :: Controllers ---
 
     App\Vault\Presentation\Controller\CreateEntryController:
         arguments:
-            $handler: '@App\Vault\Application\Command\CreateEntry\CreateEntryHandler'
+            $commandBus: '@App\Shared\Application\Port\CommandBus'
             $security: '@security.helper'
         tags: ['controller.service_arguments']
         public: true
 
     App\Vault\Presentation\Controller\GetEntryController:
         arguments:
-            $handler: '@App\Vault\Application\Query\GetEntryById\GetEntryByIdHandler'
+            $queryBus: '@App\Shared\Application\Port\QueryBus'
             $security: '@security.helper'
         tags: ['controller.service_arguments']
         public: true
 
     App\Vault\Presentation\Controller\ListEntriesController:
         arguments:
-            $handler: '@App\Vault\Application\Query\ListEntries\ListEntriesHandler'
+            $queryBus: '@App\Shared\Application\Port\QueryBus'
             $security: '@security.helper'
         tags: ['controller.service_arguments']
         public: true
 
     App\Vault\Presentation\Controller\UpdateEntryController:
         arguments:
-            $handler: '@App\Vault\Application\Command\UpdateEntry\UpdateEntryHandler'
+            $commandBus: '@App\Shared\Application\Port\CommandBus'
             $security: '@security.helper'
         tags: ['controller.service_arguments']
         public: true
 
     App\Vault\Presentation\Controller\DeleteEntryController:
         arguments:
-            $handler: '@App\Vault\Application\Command\DeleteEntry\DeleteEntryHandler'
+            $commandBus: '@App\Shared\Application\Port\CommandBus'
             $security: '@security.helper'
         tags: ['controller.service_arguments']
         public: true

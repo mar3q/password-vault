@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Identity\Presentation\Controller;
 
 use App\Identity\Application\Command\RegisterUser\RegisterUserCommand;
-use App\Identity\Application\Command\RegisterUser\RegisterUserHandler;
+use App\Identity\Application\DTO\UserDTO;
 use App\Identity\Domain\Exception\EmailAlreadyTakenException;
 use App\Identity\Domain\Exception\InvalidEmailException;
 use App\Identity\Domain\Exception\InvalidUsernameException;
+use App\Shared\Application\Port\CommandBus;
 use App\Shared\Infrastructure\Http\MalformedJsonException;
 use App\Shared\Infrastructure\Http\RequestPayload;
 use OpenApi\Attributes as OA;
@@ -66,7 +67,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final readonly class RegisterUserController
 {
     public function __construct(
-        private RegisterUserHandler $handler,
+        private CommandBus $commandBus,
     ) {}
 
     public function __invoke(Request $request): JsonResponse
@@ -89,7 +90,8 @@ final readonly class RegisterUserController
         }
 
         try {
-            $userDTO = ($this->handler)(new RegisterUserCommand($email, $username, $password));
+            /** @var UserDTO $userDTO */
+            $userDTO = $this->commandBus->dispatch(new RegisterUserCommand($email, $username, $password));
         } catch (InvalidEmailException|InvalidUsernameException $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (EmailAlreadyTakenException $e) {

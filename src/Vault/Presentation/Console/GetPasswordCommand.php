@@ -6,7 +6,8 @@ namespace App\Vault\Presentation\Console;
 
 use App\Identity\Domain\Model\Email;
 use App\Identity\Domain\Port\UserRepository;
-use App\Vault\Application\Query\ListEntries\ListEntriesHandler;
+use App\Shared\Application\Port\QueryBus;
+use App\Vault\Application\DTO\EntryDTO;
 use App\Vault\Application\Query\ListEntries\ListEntriesQuery;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -23,7 +24,7 @@ final class GetPasswordCommand extends Command
 {
     public function __construct(
         private readonly UserRepository $userRepository,
-        private readonly ListEntriesHandler $handler,
+        private readonly QueryBus $queryBus,
     ) {
         parent::__construct();
     }
@@ -58,7 +59,8 @@ final class GetPasswordCommand extends Command
             return Command::FAILURE;
         }
 
-        $entries = ($this->handler)(new ListEntriesQuery($user->id()->value()));
+        /** @var list<EntryDTO> $entries */
+        $entries = $this->queryBus->ask(new ListEntriesQuery($user->id()->value()));
 
         foreach ($entries as $entry) {
             if (mb_strtolower($entry->title) === mb_strtolower($title)) {

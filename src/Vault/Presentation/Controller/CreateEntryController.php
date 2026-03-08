@@ -7,8 +7,9 @@ namespace App\Vault\Presentation\Controller;
 use App\Identity\Infrastructure\Security\SecurityUser;
 use App\Shared\Infrastructure\Http\MalformedJsonException;
 use App\Shared\Infrastructure\Http\RequestPayload;
+use App\Shared\Application\Port\CommandBus;
 use App\Vault\Application\Command\CreateEntry\CreateEntryCommand;
-use App\Vault\Application\Command\CreateEntry\CreateEntryHandler;
+use App\Vault\Application\DTO\EntryDTO;
 use App\Vault\Domain\Exception\InvalidEntryTitleException;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -42,7 +43,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final readonly class CreateEntryController
 {
     public function __construct(
-        private CreateEntryHandler $handler,
+        private CommandBus $commandBus,
         private Security $security,
     ) {}
 
@@ -68,7 +69,8 @@ final readonly class CreateEntryController
         $user = $this->security->getUser();
 
         try {
-            $dto = ($this->handler)(new CreateEntryCommand(
+            /** @var EntryDTO $dto */
+            $dto = $this->commandBus->dispatch(new CreateEntryCommand(
                 $user->id(),
                 $title,
                 $password,

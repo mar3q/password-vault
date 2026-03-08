@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Vault\Presentation\Controller;
 
 use App\Identity\Infrastructure\Security\SecurityUser;
+use App\Shared\Application\Port\CommandBus;
 use App\Vault\Application\Command\DeleteEntry\DeleteEntryCommand;
-use App\Vault\Application\Command\DeleteEntry\DeleteEntryHandler;
 use App\Vault\Domain\Exception\AccessDeniedException;
 use App\Vault\Domain\Exception\EntryNotFoundException;
 use OpenApi\Attributes as OA;
@@ -30,7 +30,7 @@ use Symfony\Component\Uid\Uuid;
 final readonly class DeleteEntryController
 {
     public function __construct(
-        private DeleteEntryHandler $handler,
+        private CommandBus $commandBus,
         private Security $security,
     ) {}
 
@@ -44,7 +44,7 @@ final readonly class DeleteEntryController
         $user = $this->security->getUser();
 
         try {
-            ($this->handler)(new DeleteEntryCommand($id, $user->id()));
+            $this->commandBus->dispatch(new DeleteEntryCommand($id, $user->id()));
         } catch (EntryNotFoundException $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (AccessDeniedException $e) {

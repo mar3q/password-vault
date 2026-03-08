@@ -7,8 +7,8 @@ namespace App\Vault\Presentation\Controller;
 use App\Identity\Infrastructure\Security\SecurityUser;
 use App\Shared\Infrastructure\Http\MalformedJsonException;
 use App\Shared\Infrastructure\Http\RequestPayload;
+use App\Shared\Application\Port\CommandBus;
 use App\Vault\Application\Command\UpdateEntry\UpdateEntryCommand;
-use App\Vault\Application\Command\UpdateEntry\UpdateEntryHandler;
 use App\Vault\Domain\Exception\AccessDeniedException;
 use App\Vault\Domain\Exception\EntryNotFoundException;
 use App\Vault\Domain\Exception\InvalidEntryTitleException;
@@ -34,7 +34,7 @@ use Symfony\Component\Uid\Uuid;
 final readonly class UpdateEntryController
 {
     public function __construct(
-        private UpdateEntryHandler $handler,
+        private CommandBus $commandBus,
         private Security $security,
     ) {}
 
@@ -64,7 +64,7 @@ final readonly class UpdateEntryController
         $user = $this->security->getUser();
 
         try {
-            ($this->handler)(new UpdateEntryCommand(
+            $this->commandBus->dispatch(new UpdateEntryCommand(
                 $id,
                 $user->id(),
                 $title,

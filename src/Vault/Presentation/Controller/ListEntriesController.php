@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Vault\Presentation\Controller;
 
 use App\Identity\Infrastructure\Security\SecurityUser;
-use App\Vault\Application\Query\ListEntries\ListEntriesHandler;
+use App\Shared\Application\Port\QueryBus;
 use App\Vault\Application\Query\ListEntries\ListEntriesQuery;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -24,7 +24,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final readonly class ListEntriesController
 {
     public function __construct(
-        private ListEntriesHandler $handler,
+        private QueryBus $queryBus,
         private Security $security,
     ) {}
 
@@ -33,7 +33,8 @@ final readonly class ListEntriesController
         /** @var SecurityUser $user */
         $user = $this->security->getUser();
 
-        $entries = ($this->handler)(new ListEntriesQuery($user->id()));
+        /** @var list<\App\Vault\Application\DTO\EntryDTO> $entries */
+        $entries = $this->queryBus->ask(new ListEntriesQuery($user->id()));
 
         return new JsonResponse(array_map(static fn($dto) => [
             'id' => $dto->id,

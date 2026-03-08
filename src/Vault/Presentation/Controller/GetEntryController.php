@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace App\Vault\Presentation\Controller;
 
 use App\Identity\Infrastructure\Security\SecurityUser;
-use App\Vault\Application\Query\GetEntryById\GetEntryByIdHandler;
+use App\Shared\Application\Port\QueryBus;
+use App\Vault\Application\DTO\EntryDTO;
 use App\Vault\Application\Query\GetEntryById\GetEntryByIdQuery;
 use App\Vault\Domain\Exception\AccessDeniedException;
 use App\Vault\Domain\Exception\EntryNotFoundException;
@@ -30,7 +31,7 @@ use Symfony\Component\Uid\Uuid;
 final readonly class GetEntryController
 {
     public function __construct(
-        private GetEntryByIdHandler $handler,
+        private QueryBus $queryBus,
         private Security $security,
     ) {}
 
@@ -44,7 +45,8 @@ final readonly class GetEntryController
         $user = $this->security->getUser();
 
         try {
-            $dto = ($this->handler)(new GetEntryByIdQuery($id, $user->id()));
+            /** @var EntryDTO $dto */
+            $dto = $this->queryBus->ask(new GetEntryByIdQuery($id, $user->id()));
         } catch (EntryNotFoundException $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (AccessDeniedException $e) {

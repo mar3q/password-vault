@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Identity\Presentation\Console;
 
 use App\Identity\Application\Command\RegisterUser\RegisterUserCommand;
-use App\Identity\Application\Command\RegisterUser\RegisterUserHandler;
+use App\Identity\Application\DTO\UserDTO;
 use App\Identity\Domain\Exception\EmailAlreadyTakenException;
+use App\Shared\Application\Port\CommandBus;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -21,7 +22,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class CreateUserCommand extends Command
 {
     public function __construct(
-        private readonly RegisterUserHandler $handler,
+        private readonly CommandBus $commandBus,
     ) {
         parent::__construct();
     }
@@ -46,7 +47,8 @@ final class CreateUserCommand extends Command
         $password = $input->getArgument('password');
 
         try {
-            $user = ($this->handler)(new RegisterUserCommand($email, $username, $password));
+            /** @var UserDTO $user */
+            $user = $this->commandBus->dispatch(new RegisterUserCommand($email, $username, $password));
         } catch (EmailAlreadyTakenException $e) {
             $io->error($e->getMessage());
 
