@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: vault
+          MARIADB_USER: vault
+          MARIADB_PASSWORD: vault
+        ports:
+          - "3306:3306"
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: "mysql://vault:vault@127.0.0.1:3306/vault?serverVersion=10.11.2-MariaDB&charset=utf8mb4"
+      APP_ENV: test
+      APP_SECRET: ci-test-secret
+      VAULT_ENCRYPTION_KEY: "G4VLxnkIhRQpocOVA8yewBRHSVHrlSi1qaETR9rU1a4="
+      JWT_PASSPHRASE: ci-test-passphrase
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: pdo_mysql, sodium
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: PHPStan
+        run: vendor/bin/phpstan analyse -c phpstan.dist.neon --memory-limit=512M
+
+      - name: PHP CS Fixer
+        run: vendor/bin/php-cs-fixer check
+
+      - name: Generate JWT keypair
+        run: bin/console lexik:jwt:generate-keypair
+
+      - name: Run migrations
+        run: |
+          bin/console doctrine:database:create --if-not-exists --env=test
+          bin/console doctrine:migrations:migrate --no-interaction --env=test
+
+      - name: PHPUnit
+        run: vendor/bin/phpunit --testdox
