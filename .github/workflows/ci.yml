@@ -27,7 +27,7 @@ jobs:
           --health-retries=5
 
     env:
-      DATABASE_URL: "mysql://vault:vault@127.0.0.1:3306/vault?serverVersion=10.11.2-MariaDB&charset=utf8mb4"
+      DATABASE_URL: "mysql://root:root@127.0.0.1:3306/vault?serverVersion=10.11.2-MariaDB&charset=utf8mb4"
       APP_ENV: test
       APP_SECRET: ci-test-secret
       VAULT_ENCRYPTION_KEY: "G4VLxnkIhRQpocOVA8yewBRHSVHrlSi1qaETR9rU1a4="
